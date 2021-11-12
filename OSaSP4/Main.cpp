@@ -1,10 +1,35 @@
 #include "windows.h"
 #include "TaskQueue.h"
 #include <fstream>
-#define THREAD_COUNT 2
+#define THREAD_COUNT 10
 
-TaskQueue* tq;
-TaskQueue* rq;
+TaskQueue* taskQueue;
+TaskQueue* resultQueue;
+
+DWORD WINAPI ProcessTask() {
+	Task task = taskQueue->RemoveTask();
+	if (!task.text.empty()) {
+		sort(task.text.begin(), task.text.end());
+		resultQueue->AddTask(task);
+	}
+	ExitThread(0);
+}
+void CreateThreadPool(int threadCount) {
+	HANDLE* threads = (HANDLE*)malloc(sizeof(HANDLE) * threadCount);
+	for (int i = 0; i < threadCount; i++)
+	{
+		threads[i] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)ProcessTask, NULL, 0, NULL);
+	}
+	WaitForMultipleObjects(threadCount, threads, TRUE, INFINITE);
+	for (int i = 0; i < threadCount; i++)
+	{
+		if (threads[i] != NULL)
+		{
+			threads[i] = NULL;
+		}
+	}
+	free(threads);
+}
 vector<string> ReadFile() {
 	ifstream file("data.txt");
 	string word;
@@ -17,7 +42,7 @@ vector<string> ReadFile() {
 void WriteResult(const vector<string>& data) {
 	ofstream file("result.txt");
 	for (const auto& line : data) {
-		file << line << " ";
+		file << line << endl;
 	}
 }
 void CreateTasks(vector<string>& data) {
@@ -26,7 +51,7 @@ void CreateTasks(vector<string>& data) {
 		Task task(vector<string>{data.begin() + i * taskSize, 
 			data.size() < (i + 1) * taskSize ? 
 			data.end() : data.begin() + (i + 1) * taskSize});
-		tq->AddTask(task);
+		taskQueue->AddTask(task);
 	}
 }
 vector<string> MergeSort(vector<string> v1, vector<string> v2)
@@ -47,20 +72,21 @@ vector<string> MergeSort(vector<string> v1, vector<string> v2)
 }
 int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR lpCmdLine, int nCmdShow)
 {
-	tq = new TaskQueue();
-	rq = new TaskQueue();
+	taskQueue = new TaskQueue();
+	resultQueue = new TaskQueue();
 	auto data = ReadFile();
 	CreateTasks(data);
+	CreateThreadPool(THREAD_COUNT);
 	vector<string> result;
-	if (rq->Size() > 0) {
-		result = tq->RemoveTask().text;
-		while (rq->Size() > 0) {
-			data = rq->RemoveTask().text;
+	if (resultQueue->Size() > 0) {
+		result = taskQueue->RemoveTask().text;
+		while (resultQueue->Size() > 0) {
+			data = resultQueue->RemoveTask().text;
 			result = MergeSort(result, data);
 		}
 		WriteResult(result);
 	}
-	free(tq);
-	free(rq);
+	free(taskQueue);
+	free(resultQueue);
 	return 0;
 }
