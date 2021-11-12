@@ -10,8 +10,11 @@ void TaskQueue::AddTask(Task task) {
 }
 Task TaskQueue::RemoveTask() {
 	EnterCriticalSection(&criticalSection);
-	Task task = tasks.front();
-	tasks.pop();
+	Task task;
+	if (tasks.size() > 0) {
+		task = tasks.front();
+		tasks.pop();
+	}
 	LeaveCriticalSection(&criticalSection);
 	return task;
 }
