@@ -21,9 +21,6 @@
     <ClCompile Include="TaskQueue.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="ThreadPool.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
     <ClCompile Include="Task.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
@@ -33,9 +30,6 @@
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="Task.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="ThreadPool.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>

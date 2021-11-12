@@ -8,6 +8,7 @@ public:
 	TaskQueue();
 	void AddTask(Task task);
 	Task RemoveTask();
+	int Size();
 private:
 	CRITICAL_SECTION criticalSection;
 	queue<Task> tasks;

@@ -18,3 +18,10 @@ Task TaskQueue::RemoveTask() {
 	LeaveCriticalSection(&criticalSection);
 	return task;
 }
+
+int TaskQueue::Size() {
+	EnterCriticalSection(&criticalSection);
+	auto size = this->tasks.size();
+	LeaveCriticalSection(&criticalSection);
+	return size;
+}

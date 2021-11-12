@@ -5,30 +5,6 @@
 
 TaskQueue* tq;
 TaskQueue* rq;
-DWORD WINAPI ProcessTask() {
-	Task task = tq->RemoveTask();
-	if (!task.text.empty()) {
-		sort(task.text.begin(), task.text.end());
-		rq->AddTask(task);
-	}
-	ExitThread(0);
-}
-void CreateThreadPool(int threadCount) {
-	HANDLE* threads = (HANDLE*)malloc(sizeof(HANDLE) * threadCount);
-	for (int i = 0; i < threadCount; i++)
-	{
-		threads[i] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)ProcessTask, NULL, 0, NULL);
-	}
-	WaitForMultipleObjects(threadCount, threads, TRUE, INFINITE);
-	for (int i = 0; i < threadCount; i++)
-	{
-		if (threads[i] != NULL)
-		{
-			threads[i] = NULL;
-		}
-	}
-	free(threads);
-}
 vector<string> ReadFile() {
 	ifstream file("data.txt");
 	string word;
@@ -39,7 +15,7 @@ vector<string> ReadFile() {
 	return data;
 }
 void WriteResult(const vector<string>& data) {
-	ofstream file("../result.txt");
+	ofstream file("result.txt");
 	for (const auto& line : data) {
 		file << line << " ";
 	}
@@ -53,14 +29,37 @@ void CreateTasks(vector<string>& data) {
 		tq->AddTask(task);
 	}
 }
+vector<string> MergeSort(vector<string> v1, vector<string> v2)
+{
+	int i = 0, j = 0;
+	vector<string> res{};
+	while (i < v1.size() && j < v2.size()) {
+		if (v1[i] < v2[j])
+			res.push_back(v1[i++]);
+		else
+			res.push_back(v2[j++]);
+	}
+	while (i < v1.size())
+		res.push_back(v1[i++]);
+	while (j < v2.size())
+		res.push_back(v2[j++]);
+	return res;
+}
 int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR lpCmdLine, int nCmdShow)
 {
 	tq = new TaskQueue();
 	rq = new TaskQueue();
 	auto data = ReadFile();
 	CreateTasks(data);
-	CreateThreadPool(THREAD_COUNT);
-	rq->RemoveTask();
+	vector<string> result;
+	if (rq->Size() > 0) {
+		result = tq->RemoveTask().text;
+		while (rq->Size() > 0) {
+			data = rq->RemoveTask().text;
+			result = MergeSort(result, data);
+		}
+		WriteResult(result);
+	}
 	free(tq);
 	free(rq);
 	return 0;
